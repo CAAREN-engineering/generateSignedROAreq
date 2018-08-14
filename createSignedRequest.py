@@ -13,7 +13,7 @@ def getROAdetails():
     '''
     goodInterval = False
     today = time.strftime('%m-%d-%Y')
-    ASN = int(input("ANS: "))
+    ASN = int(input("ASN: "))
     ROAname = str(input("ROA Name: "))
     prefixFile = str(input("Name of file containing list of prefixes (default = prefixes): ") or "prefixes")
     vStart = str(input("Validity start date (MM-DD-YYY)(default = today {}) ".format(today)) or today)
