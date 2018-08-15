@@ -23,8 +23,8 @@ def getROAdetails():
             print("End date must but at least one day after start date")
         else:
             goodInterval = True
-    privKey = str(input("Private Key to sign request (default = privkey.pem) " or "privkey.pem"))
-    return ASN, ROAname, prefixFile, vStart, vEnd, privKey
+    privateKeyFile = str(input("Private Key to sign request (default = privkey.pem): ") or "privkey.pem")
+    return ASN, ROAname, prefixFile, vStart, vEnd, privateKeyFile
 
 
 def getPrefixList(file):
@@ -66,7 +66,7 @@ def validatePrefixList(pfList):
     return valids, invalidPFlist
 
 
-def generateROAreqLine(ASN, ROAname, prefixFile, vStart, vEnd, privKey, prefixlist):
+def generateROAreqLine(ASN, ROAname, prefixFile, vStart, vEnd, prefixlist):
     '''
     generate the ROA request.  in a manually signed ROA request, this is the single list that gets signed
     by ssl.  it is a pipe (|) separated line in the following format:
@@ -86,7 +86,7 @@ def generateROAreqLine(ASN, ROAname, prefixFile, vStart, vEnd, privKey, prefixli
         1|1340135296|My First ROA|1234|05-25-2011|05-25-2012|10.0.0.0|8||
         A request list for multiple prefixes (again, no max field) might look like:
         1|1533652213|multipleROA|4901|07-22-2015|07-22-2025|2620:106:C000::|44||2620:106:c00f:fd00::|64||
-    :param ASN, ROAname, prefixFile, vStart, vEnd, privKey, prefixlist
+    :param ASN, ROAname, prefixFile, vStart, vEnd, prefixlist
     :return: roareq(str)
     '''
     epochtime = int(time.time())
@@ -97,24 +97,26 @@ def generateROAreqLine(ASN, ROAname, prefixFile, vStart, vEnd, privKey, prefixli
     return roareq
 
 
-def createSignedRequest(roaReqLine):
+def createSignedRequest(roaReqLine, ROAname, privKey):
     '''
     generate and convert the signature
     combine signature with ROA request line to form fully formatted signed request
     :param roaReqLine:
+    :param privKey
     :return: string which is the fully formed, signed request
     '''
+    filename = ROAname + '_' + time.strftime("%d%b%Y-%H%M") + '.txt'
     # write the ROA request line to a file so we can sign it
     with open('roadata.txt', 'w') as roadata:
         roadata.write(roaReqLine)
     #    roadata.write('\n')
     # sign the ROA request line and convert the signature format
-    subprocess.call(["openssl", "dgst", "-sha256", "-sign", "orgkeypair.pem", "-keyform", "PEM", "-out", "signature",
+    subprocess.call(["openssl", "dgst", "-sha256", "-sign", privKey, "-keyform", "PEM", "-out", "signature",
                      "roadata.txt"])
     with open('sig_base64', 'w') as outfile:
         subprocess.call(["openssl", "enc", "-base64", "-in", "signature"], stdout=outfile)
     # combine the various pieces to make a complete signed request
-    with open('SignedRequest', 'w') as final:
+    with open(filename, 'w') as final:
         final.write('-----BEGIN ROA REQUEST-----\n')
         with open('roadata.txt', 'r') as roadata:
             for line in roadata:
@@ -125,6 +127,7 @@ def createSignedRequest(roaReqLine):
             for line in sig:
                 final.write(line)
         final.write('-----END SIGNATURE-----\n')
+    print("\n" + filename + " has been created.")
     # clean up temporary files
     subprocess.call(['rm', 'signature'])
     subprocess.call(['rm', 'sig_base64'])
@@ -142,8 +145,8 @@ def main():
         print("***Detected {} invalid prefixes.  Bailing....".format(len(invalidList)))
         exit(1)
     print("{} valid prefixes will be included in the ROA request.".format(len(validList)))
-    roaRequstData = generateROAreqLine(ASN, ROAname, prefixFile, vStart, vEnd, privKey, validList)
-    createSignedRequest(roaRequstData)
+    roaRequstData = generateROAreqLine(ASN, ROAname, prefixFile, vStart, vEnd, validList)
+    createSignedRequest(roaRequstData, ROAname, privKey)
 
 
 main()
