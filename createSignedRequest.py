@@ -105,7 +105,7 @@ def createSignedRequest(roaReqLine, ROAname, privKey):
     :param privKey
     :return: string which is the fully formed, signed request
     '''
-    filename = ROAname + '_' + time.strftime("%d%b%Y-%H%M") + '.txt'
+    filename = ROAname + '_' + time.strftime("%d%b%Y-%H%M").upper() + '.txt'
     # write the ROA request line to a file so we can sign it
     with open('roadata.txt', 'w') as roadata:
         roadata.write(roaReqLine)
