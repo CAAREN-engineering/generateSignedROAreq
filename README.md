@@ -12,7 +12,7 @@ The interactive script will ask for the following information:
 * File containing prefixes (default is `prefix`)
 * Certificate start date (MM-DD-YYYY) (default is today's date)
 * Certificate expiration (MM-DD-YYYY)
-* Name of the file containing the key to sign the request (defauls to `orgkey.pem`)
+* Name of the file containing the key to sign the request (defauls to `privkey.pem`)
 
 The file of prefixes should contain a single prefix (v4 or v6) per line.  Comments are noted by `#`
 
