@@ -19,10 +19,10 @@ The file of prefixes should contain a single prefix (v4 or v6) per line.  Commen
 The script uses Python `ipaddress` module to validate each prefix.  In the event of any error, the script exits.
 
 IPv6 addresses are "normalized" to their compressed form, because (currently) ARIN's parser doesn't accept uncompressed addresses.  For example the first line results in an error,
-<pre>2001:0db8:fff0::/44</pre> , while
-<pre>2001:db8:fff0::/44</pre> would not.
+<pre>2001:0db8:fff0::/44</pre>while theis entry would not:
+<pre>2001:db8:fff0::/44</pre>
 
-The script creates a file called `SignedRequest.`  This can be pasted into ARIN's Hosted RPKI Portal.
+The script creates a file named with the ROA name given when the script is run along with a timestamp.  For example, if you entered "MyFirstROA" as the ROA name, the output file will be `MyFirstROA_15AUG2018-1236.txt`.  This can be pasted into ARIN's Hosted RPKI Portal.
 
 ### Use cases
 The current guidance on creating RPKI ROAs is *not* use the optional Max Length field to allow a range of prefixes.
