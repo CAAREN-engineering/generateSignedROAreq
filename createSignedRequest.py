@@ -3,17 +3,13 @@
 import ipaddress
 import time
 import subprocess
-from sys import exit
-from os import path
+import os
 from argparse import ArgumentParser
 import yaml
 import re
 
 
 parser = ArgumentParser(description="Generate signed ROA requests for ARIN portal")
-
-parser.add_argument("-i", "--interactive", dest='i', action='store_true',
-                    help="run interactively (default is no)")
 
 parser.add_argument("-r", "--ROAinfo", dest="r", metavar="",
                     action="store", default="ROAinfo.yml",
@@ -22,59 +18,7 @@ parser.add_argument("-r", "--ROAinfo", dest="r", metavar="",
 
 args = parser.parse_args()
 
-interactive = args.i
 ROAinfoFile = args.r
-
-
-def getROAdetails():
-    '''
-    interactively get info needed to create the ROA request line
-    :return: ASN, ROAname, prefixFile, vStart, vEnd, privKey
-    '''
-    goodInterval = False
-    pfxfileExists = False
-    keyfileExists = False
-    today = time.strftime('%m-%d-%Y')
-    tempdict = {}
-    ASN = int(input("ASN: "))
-    ROAname = str(input("ROA Name: "))
-    while not pfxfileExists:
-        prefixFile = str(input("Name of file containing list of prefixes (default = prefixes): ") or "prefixes")
-        pfxfileExists = path.exists(prefixFile)
-    vStart = str(input("Validity start date (MM-DD-YYY)(default = today {}) ".format(today)) or today)
-    while not goodInterval:
-        vEnd = str(input("Validity end date (MM-DD-YYY) ".format(today)))
-        if time.strptime(vEnd, "%m-%d-%Y") <= time.strptime(vStart, "%m-%d-%Y"):
-            print("End date must but at least one day after start date")
-        else:
-            goodInterval = True
-    while not keyfileExists:
-        privateKeyFile = str(input("Private Key to sign request (default = privkey.pem): ") or "privkey.pem")
-        keyfileExists = path.exists(privateKeyFile)
-    tempdict['ASN'] = ASN
-    tempdict['ROAname'] = ROAname
-    tempdict['prefixFile'] = prefixFile
-    tempdict['vStart'] = vStart
-    tempdict['vEnd'] = vEnd
-    tempdict['privateKeyFile'] = privateKeyFile
-    return tempdict
-
-
-def getPrefixList(file):
-    '''
-    process input list of prefixes
-    read a file, strip the comments ('#'),
-    :param file:
-    :return: prefixes (list, no comments)
-    '''
-    with open(file) as f:
-        prefixes = []
-        for line in f:
-            line = line.partition('#')[0]
-            line = line.rstrip()
-            if len(line) > 0:
-                prefixes.append(line)
-    return prefixes
 
 
 def readYML():
@@ -111,9 +55,7 @@ def preProcessPrefixes(prefixList):
         print("***Detected {} invalid prefixes.  Bailing....".format(len(invalidList)))
         for badline in invalidList:
             print(badline)
-        print("***Detected {} invalid prefixes.  Bailing....".format(len(invalidList)))
-        exit(1)
-    print("{} valid prefixes will be included in the ROA request.".format(len(validList)))
+        os._exit(1)
     return
 
 
@@ -166,8 +108,12 @@ def generateROAreqLine(inDict):
     # create the static portion of the ROA request line
     roareq = "{}|{}|{}|{}|{}|{}|".format(inDict['Version'], epochtime, inDict['ROAName'], inDict['OriginAS'],
                                          inDict['StartDate'], inDict['EndDate'])
-    for network in inDict['Prefixes']:
-        roareq += '{}|{}||'.format(network.split('/')[0], network.split('/')[1])
+    for entry in inDict['Prefixes']:
+        components = re.split("[/ -]", entry)
+        if len(components) == 2:                                # no mask length option
+            roareq += '{}|{}||'.format(components[0], components[1])
+        else:                                                   # optional masklength
+            roareq += '{}|{}|{}|'.format(components[0], components[1], components[4])
     return roareq
 
 
@@ -209,12 +155,7 @@ def createSignedRequest(roaReqLine, ROAName, privKey):
 
 
 def main():
-    if interactive:
-        allInfo = getROAdetails()
-        # will need to create dictionary at this point to match what is read from the YML file
-        allInfo['Prefixes'] = getPrefixList(allInfo['prefixFile'])
-    else:
-        allInfo = readYML()
+    allInfo = readYML()
     # preprocess prefixes to catch lines with max length
     preProcessPrefixes(allInfo['Prefixes'])
     roaRequstData = generateROAreqLine(allInfo)
