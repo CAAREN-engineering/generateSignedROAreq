@@ -131,8 +131,12 @@ def createSignedRequest(roaReqLine, ROAName, privKey):
         roadata.write(roaReqLine)
     #    roadata.write('\n')
     # sign the ROA request line and convert the signature format
-    subprocess.call(["openssl", "dgst", "-sha256", "-sign", privKey, "-keyform", "PEM", "-out", "signature",
-                     "roadata.txt"])
+    try:
+        subprocess.check_output(["openssl", "dgst", "-sha256", "-sign", privKey, "-keyform", "PEM", "-out",
+                                 "signature", "roadata.txt"])
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        os._exit(1)
     with open('sig_base64', 'w') as outfile:
         subprocess.call(["openssl", "enc", "-base64", "-in", "signature"], stdout=outfile)
     # combine the various pieces to make a complete signed request
@@ -141,6 +145,7 @@ def createSignedRequest(roaReqLine, ROAName, privKey):
         with open('roadata.txt', 'r') as roadata:
             for line in roadata:
                 final.write(line)
+        final.write('\n')
         final.write('-----END ROA REQUEST-----\n')
         final.write('-----BEGIN SIGNATURE-----\n')
         with open('sig_base64', 'r') as sig:
