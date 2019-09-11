@@ -4,7 +4,7 @@ A Python script to generate a signed ROA request that can be pasted into ARIN's 
 
 This will be useful in cases where a large number of prefixes need to be included in one ROA.  It is inconvenient to use the web form to add these prefixes individually.
 
-When using ARIN's Operational Test and Evaluation Environment (OT&E), you can use the "private" key of the [keypair publicly available](https://www.arin.net/resources/ote.html).
+When using ARIN's Operational Test and Evaluation Environment (OT&E), you can use the "private" key of the [keypair publicly available](https://www.arin.net/reference/tools/testing/#public-key-for-testing-purposes).
 
 The script reads from ROAinfo.yml (by default, can be changed vi `-r` flag) the following information:
 * Version (should always be 1, included for future compatibility if more versions are supported)
