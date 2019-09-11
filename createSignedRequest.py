@@ -92,12 +92,13 @@ def preProcessPrefixes(prefixList):
             except ValueError:
                 invalidlist.append(reformattedprefixrange)
     print("\nNumber of valid entries included in ROA request: {}".format(len(tvallist)))
-    print("\nNumber of invalid entries under '[Prefixes]': {}".format(len(invalidlist)))
-    print(
-        "The following have been EXCLUDED from the signed ROA request.  If you want them included in the same ROA,"
-        " please edit the input YML to correct the error and re-run.")
-    for badprefix in invalidlist:
-        print(badprefix)
+    if len(invalidlist) > 0:
+        print("\nNumber of invalid entries under '[Prefixes]': {}".format(len(invalidlist)))
+        print(
+            "The following have been EXCLUDED from the signed ROA request.  If you want them included in the same ROA,"
+            " please edit the input YML to correct the error and re-run.")
+        for badprefix in invalidlist:
+            print(badprefix)
     return tvallist
 
 
