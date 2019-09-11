@@ -15,8 +15,9 @@ EndDate:
   09-09-2020
 
 Prefixes:
-  - 172.16.0.0/16
-
+  - 172.16.0.0/16            # replace with your prefixes
+  - 2001:0DB8::/32           # comments are allowed, tabs are not, only spaces
+  - 172.18.0.0/16-18         # mask ranges are supported
 
 Keyfile:
   privkey.pem
